@@ -31,6 +31,8 @@ jobs:
 
       - name: Build frontend
         working-directory: frontend
+        env:
+          VITE_API_BASE_URL: ""
         run: |
           npm ci
           npm run build
@@ -38,15 +40,16 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
 
-      - name: Install backend dependencies
-        working-directory: backend
-        run: |
-          uv sync --frozen
-
       - name: Prepare deployment package
         run: |
           rm -rf deploy
           mkdir -p deploy
+
+          uv export \
+            --directory backend \
+            --format requirements.txt \
+            --no-hashes \
+            --output-file deploy/requirements.txt
 
           cp -r backend deploy/backend
           cp -r frontend deploy/frontend
@@ -82,6 +85,14 @@ jobs:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_0944281A8B894A36A64464B3E388C922 }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A1D3EE7C0F2F4AA893A28F7976961B50 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_075A6C388E9D48B5A35470510565BB34 }}
+
+      - name: Enable Azure build automation
+        run: |
+          az webapp config appsettings set \
+            --resource-group studybuddy-rg \
+            --name studybuddy \
+            --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
