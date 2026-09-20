@@ -37,22 +37,14 @@ jobs:
           npm ci
           npm run build
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
-
       - name: Prepare deployment package
         run: |
           rm -rf deploy
           mkdir -p deploy
 
-          uv export \
-            --directory backend \
-            --format requirements.txt \
-            --no-hashes \
-            --output-file deploy/requirements.txt
-
           cp -r backend deploy/backend
           cp -r frontend deploy/frontend
+          cp backend/requirements.txt deploy/requirements.txt
 
           rm -rf deploy/backend/.venv
           rm -rf deploy/backend/__pycache__
